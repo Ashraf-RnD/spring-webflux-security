@@ -2,7 +2,6 @@ package ashraf.rnd.springwebfluxsecurity.security;
 
 
 import ashraf.rnd.springwebfluxsecurity.model.entity.redis.AuthenticationTokenData;
-import ashraf.rnd.springwebfluxsecurity.model.request.AppUser;
 import ashraf.rnd.springwebfluxsecurity.service.JwtService;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import lombok.AllArgsConstructor;
@@ -30,6 +29,7 @@ public class AuthenticationManager implements ReactiveAuthenticationManager {
 
     @Override
     public Mono<Authentication> authenticate(Authentication authentication) {
+        log.info("AuthenticationManager:: authenticate:: reached {}", System.currentTimeMillis());
         return Mono.just(authentication.getCredentials().toString())
                 .flatMap(this::verifyToken)
                 .flatMap(this::getAuthentication);
@@ -51,10 +51,10 @@ public class AuthenticationManager implements ReactiveAuthenticationManager {
 
         return tokenService.verifyToken(token)
                 .filter(decodedJWT -> decodedJWT.getAudience() != null && !decodedJWT.getAudience().isEmpty())
-                .flatMap(tokenData -> getAppUser(tokenData,token));
+                .flatMap(tokenData -> getAppUser(tokenData, token));
     }
 
-    private static Mono<AuthenticationTokenData> getAppUser(DecodedJWT decodedJWT, String token) {
+    private Mono<AuthenticationTokenData> getAppUser(DecodedJWT decodedJWT, String token) {
         return Mono.just(AuthenticationTokenData.builder()
                 .userAudience(decodedJWT.getAudience().get(0))
                 .userId(decodedJWT.getClaim(TOKEN_CLAIM_USER).asString())

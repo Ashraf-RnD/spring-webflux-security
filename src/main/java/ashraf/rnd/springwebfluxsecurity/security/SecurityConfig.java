@@ -1,6 +1,7 @@
 package ashraf.rnd.springwebfluxsecurity.security;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableReactiveMethodSecurity;
@@ -8,6 +9,7 @@ import org.springframework.security.config.annotation.web.reactive.EnableWebFlux
 import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.web.server.SecurityWebFilterChain;
 
+@Slf4j
 @Configuration
 @EnableWebFluxSecurity
 @EnableReactiveMethodSecurity
@@ -15,7 +17,7 @@ import org.springframework.security.web.server.SecurityWebFilterChain;
 public class SecurityConfig {
 
     public static final String[] PERMITTED_URL = new String[]{
-            "/token/**",
+            "/token/get",
             "/v2/api-docs",
             "/actuator/**"
     };
@@ -24,6 +26,7 @@ public class SecurityConfig {
 
     @Bean
     SecurityWebFilterChain springWebFilterChain(ServerHttpSecurity serverHttpSecurity) {
+        log.info("SecurityConfig:: springWebFilterChain:: reached {}", System.currentTimeMillis());
 
         return serverHttpSecurity
                 .authenticationManager(authenticationManager)

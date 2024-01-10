@@ -1,10 +1,7 @@
 package ashraf.rnd.springwebfluxsecurity.security;
 
 import ashraf.rnd.springwebfluxsecurity.model.entity.redis.AuthenticationTokenData;
-import ashraf.rnd.springwebfluxsecurity.model.request.AppUser;
 import ashraf.rnd.springwebfluxsecurity.repository.TokenRedisRepository;
-import ashraf.rnd.springwebfluxsecurity.service.JwtService;
-import ashraf.rnd.springwebfluxsecurity.service.TokenService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.buffer.DataBuffer;
@@ -19,8 +16,6 @@ import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.util.Objects;
-
 @Slf4j
 @Component
 @AllArgsConstructor
@@ -30,15 +25,15 @@ public class AuthenticationFilter implements WebFilter {
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
 
+        log.info("AuthenticationFilter:: filter:: reached {}",System.currentTimeMillis());
         return ReactiveSecurityContextHolder.getContext()
-                .map(securityContext -> (String) securityContext.getAuthentication().getPrincipal())
-                .defaultIfEmpty("")
-//                .filter(Objects::nonNull)
+                .map(securityContext -> (AuthenticationTokenData) securityContext.getAuthentication().getPrincipal())
+                .defaultIfEmpty(AuthenticationTokenData.builder().build())
+//                .filter(authenticationTokenData -> authenticationTokenData.getUserAudience() != null)
 //                .flatMap(token -> chain.filter(decorate(exchange, token)))
 //                .switchIfEmpty(chain.filter(exchange));
-
                 .flatMap(token -> {
-                    if (token != null) {
+                    if (token.getUserAudience() != null) {
                         return chain.filter(decorate(exchange, token));
                     }
                     return chain.filter(exchange);
@@ -47,7 +42,7 @@ public class AuthenticationFilter implements WebFilter {
 
     }
 
-    private ServerWebExchange decorate(ServerWebExchange exchange, String token) {
+    private ServerWebExchange decorate(ServerWebExchange exchange, AuthenticationTokenData token) {
         final ServerHttpRequest decorated = new ServerHttpRequestDecorator(exchange.getRequest()) {
             @Override
             public Flux<DataBuffer> getBody() {
@@ -64,30 +59,30 @@ public class AuthenticationFilter implements WebFilter {
         };
     }
 
-    private Mono<?> authenticateToken(String token) {
-        return verifyAppUser(token)
+    private Mono<?> authenticateToken(AuthenticationTokenData appUser) {
+        return verifyAppUser(appUser)
                 .filter(valid -> valid)
                 .switchIfEmpty(Mono.error(new RuntimeException("INVALID_USER_TOKEN")));
     }
 
 
-    private Mono<Boolean> verifyAppUser(String token) {
+    private Mono<Boolean> verifyAppUser(AuthenticationTokenData appUser) {
 
-        return Mono.just(true);
+        return getAppUser(appUser.getUserAudience())
+                .map(appUserCacheData -> verifyUserData(appUserCacheData, appUser))
+                .defaultIfEmpty(Boolean.FALSE);
     }
 
-    private boolean verifyUserData(AppUser appUser, AuthenticationTokenData userFromCache) {
+    private boolean verifyUserData(AuthenticationTokenData userFromCache, AuthenticationTokenData userFromToken) {
 
-        return userFromCache.getUserAudience().equals(appUser.getUserAudience()) &&
-                userFromCache.getUserId().equals(appUser.getUserId()) &&
-                userFromCache.getDeviceId().equals(appUser.getDeviceId());
-//        &&
-//                userFromCache.getToken().equals(appUser.getToken());
+        return userFromCache.getUserAudience().equals(userFromToken.getUserAudience()) &&
+                userFromCache.getUserId().equals(userFromToken.getUserId()) &&
+                userFromCache.getDeviceId().equals(userFromToken.getDeviceId()) &&
+                userFromCache.getToken().equals(userFromToken.getToken());
     }
 
-    public Mono<AuthenticationTokenData> getAppUser(String userIdentityNumber) {
-
-        return tokenRedisRepository.getAppUserData(userIdentityNumber);
+    public Mono<AuthenticationTokenData> getAppUser(String userAudience) {
+        return tokenRedisRepository.getAppUserData(userAudience);
     }
 
 

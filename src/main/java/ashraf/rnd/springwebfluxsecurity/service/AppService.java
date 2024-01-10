@@ -9,6 +9,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
+import static ashraf.rnd.springwebfluxsecurity.utility.JwtUtility.getTokenExpirationTime;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -19,9 +21,9 @@ public class AppService {
 
     public Mono<TokenResponse> getAuthToken(AppUser request) {
         log.info("AppService:: getAuthToken:: request: {}", request);
-        return tokenService.generateToken(request)
+        return tokenService.generateToken(request, getTokenExpirationTime())
                 .flatMap(accessToken -> getSaveToken(request, accessToken))
-                .map(token -> TokenResponse.builder().accessToken(token).build());
+                .map(token -> TokenResponse.builder().accessToken(token).expiresInSecond(300L).build());
 
     }
 

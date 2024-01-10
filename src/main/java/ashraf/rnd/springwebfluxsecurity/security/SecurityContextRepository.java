@@ -1,6 +1,7 @@
 package ashraf.rnd.springwebfluxsecurity.security;
 
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContext;
@@ -10,6 +11,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
+@Slf4j
 @Component
 @AllArgsConstructor
 public class SecurityContextRepository implements ServerSecurityContextRepository {
@@ -26,6 +28,7 @@ public class SecurityContextRepository implements ServerSecurityContextRepositor
 
     @Override
     public Mono<SecurityContext> load(ServerWebExchange serverWebExchange) {
+        log.info("SecurityContextRepository:: load:: reached {}",System.currentTimeMillis());
 
         return Mono.just(serverWebExchange.getRequest())
                 .mapNotNull(serverHttpRequest -> serverHttpRequest.getHeaders().getFirst(HttpHeaders.AUTHORIZATION))

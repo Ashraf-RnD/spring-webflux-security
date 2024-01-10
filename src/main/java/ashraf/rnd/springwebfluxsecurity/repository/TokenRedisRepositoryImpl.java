@@ -9,7 +9,7 @@ import reactor.core.publisher.Mono;
 import static ashraf.rnd.springwebfluxsecurity.utility.JwtUtility.TOKEN_ISSUER;
 
 @Repository
-public class TokenRedisRepositoryImpl extends AbstractRedisRepository implements TokenRedisRepository{
+public class TokenRedisRepositoryImpl extends AbstractRedisRepository implements TokenRedisRepository {
     public TokenRedisRepositoryImpl(ReactiveRedisTemplate<String, String> redisTemplate, MapperUtils mapperUtils) {
         super(redisTemplate, mapperUtils);
     }
@@ -23,6 +23,7 @@ public class TokenRedisRepositoryImpl extends AbstractRedisRepository implements
 
     @Override
     public Mono<AuthenticationTokenData> getAppUserData(String audience) {
-        return null;
+        return Mono.just(TOKEN_ISSUER.concat("-").concat(audience))
+                .flatMap(hashKey -> getData(hashKey, audience, AuthenticationTokenData.class));
     }
 }

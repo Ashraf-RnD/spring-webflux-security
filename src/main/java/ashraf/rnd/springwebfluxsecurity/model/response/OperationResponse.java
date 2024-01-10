@@ -7,9 +7,9 @@ import lombok.NoArgsConstructor;
 
 @Data
 @Builder
-@AllArgsConstructor
 @NoArgsConstructor
-public class TokenResponse {
-    private String accessToken;
-    private Long expiresInSecond;
+@AllArgsConstructor
+public class OperationResponse {
+    private String opReqId;
+    private String boTime;
 }

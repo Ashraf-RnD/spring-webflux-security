@@ -19,21 +19,10 @@ public abstract class AbstractRedisRepository {
         return REDIS_HASH_KEY_PREFIX + hashKey;
     }
 
-    protected <T> Mono<T> getData(String hashKey, Class<T> tClass) {
-
-        return redisTemplate.opsForValue().get(getRedisHashKey(hashKey))
-                .map(o -> mapperUtils.deserialize(o, tClass));
-    }
-
     protected <T> Mono<T> getData(String hashKey, Object dataKey, Class<T> tClass) {
 
         return redisTemplate.opsForHash().get(getRedisHashKey(hashKey), dataKey)
                 .map(o -> mapperUtils.deserialize(o, tClass));
-    }
-
-    protected Mono<Boolean> saveData(String hashKey, Object data) {
-
-        return redisTemplate.opsForValue().set(getRedisHashKey(hashKey), mapperUtils.serialize(data));
     }
 
     protected Mono<Boolean> saveData(String hashKey, Object dataKey, Object data) {

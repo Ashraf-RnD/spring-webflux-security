@@ -6,8 +6,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import javax.xml.validation.Validator;
-
 import static ashraf.rnd.springwebfluxsecurity.utility.EncryptionUtility.PRIVATE_KEY;
 import static ashraf.rnd.springwebfluxsecurity.utility.EncryptionUtility.PUBLIC_KEY;
 
@@ -22,7 +20,7 @@ public class AppConfig {
     }
 
     @Bean
-    public ObjectMapper objectMapper(){
+    public ObjectMapper objectMapper() {
         return new ObjectMapper();
     }
 
