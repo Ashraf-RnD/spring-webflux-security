@@ -28,8 +28,10 @@ public class AppService {
     private Mono<String> getSaveToken(AppUser request, String accessToken) {
         log.info("AppService:: getAuthToken:: request: {}, token: {}", request, accessToken);
         return tokenRedisRepository.saveToken(AuthenticationTokenData.builder()
+                        .userAudience(request.getUserAudience())
                         .token(accessToken)
                         .userId(request.getUserId())
+                        .deviceId(request.getDeviceId())
                         .build(), 300)
                 .flatMap(saved -> Mono.just(accessToken));
     }

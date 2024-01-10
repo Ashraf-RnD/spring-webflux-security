@@ -20,7 +20,7 @@ public class AppController {
     private final AppService appService;
 
     @PostMapping("/token/get")
-    public Mono<TokenResponse> getAuthToken(@RequestBody AppUser request, @RequestHeader HttpHeaders httpHeaders) {
+    public Mono<TokenResponse> getAuthToken(@RequestBody AppUser request) {
 
         log.info("AppController:: getAuthToken:: request: {}",request);
         return appService.getAuthToken(request);

@@ -16,7 +16,7 @@ public class TokenRedisRepositoryImpl extends AbstractRedisRepository implements
 
     @Override
     public Mono<Boolean> saveToken(AuthenticationTokenData authenticationTokenData, long keyExpiresInSecond) {
-        return Mono.just(TOKEN_ISSUER.concat(authenticationTokenData.getUserAudience()))
+        return Mono.just(TOKEN_ISSUER.concat("-").concat(authenticationTokenData.getUserAudience()))
                 .flatMap(hashKey -> saveData(hashKey, authenticationTokenData.getUserAudience(), authenticationTokenData)
                         .flatMap(isSaved -> setExpiry(hashKey, keyExpiresInSecond)));
     }

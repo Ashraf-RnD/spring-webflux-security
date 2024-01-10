@@ -3,6 +3,8 @@ package ashraf.rnd.springwebfluxsecurity.security;
 import ashraf.rnd.springwebfluxsecurity.model.entity.redis.AuthenticationTokenData;
 import ashraf.rnd.springwebfluxsecurity.model.request.AppUser;
 import ashraf.rnd.springwebfluxsecurity.repository.TokenRedisRepository;
+import ashraf.rnd.springwebfluxsecurity.service.JwtService;
+import ashraf.rnd.springwebfluxsecurity.service.TokenService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.buffer.DataBuffer;
@@ -17,6 +19,8 @@ import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.Objects;
+
 @Slf4j
 @Component
 @AllArgsConstructor
@@ -27,15 +31,15 @@ public class AuthenticationFilter implements WebFilter {
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
 
         return ReactiveSecurityContextHolder.getContext()
-                .map(securityContext -> (AppUser) securityContext.getAuthentication().getPrincipal())
-                .defaultIfEmpty(AppUser.builder().build())
-//                .filter(authenticationTokenData -> authenticationTokenData !=null)
-//                .flatMap(appUser -> chain.filter(decorate(exchange, appUser)))
+                .map(securityContext -> (String) securityContext.getAuthentication().getPrincipal())
+                .defaultIfEmpty("")
+//                .filter(Objects::nonNull)
+//                .flatMap(token -> chain.filter(decorate(exchange, token)))
 //                .switchIfEmpty(chain.filter(exchange));
 
-                .flatMap(appUser -> {
-                    if (appUser != null) {
-                        return chain.filter(decorate(exchange, appUser));
+                .flatMap(token -> {
+                    if (token != null) {
+                        return chain.filter(decorate(exchange, token));
                     }
                     return chain.filter(exchange);
                 });
@@ -43,12 +47,12 @@ public class AuthenticationFilter implements WebFilter {
 
     }
 
-    private ServerWebExchange decorate(ServerWebExchange exchange, AppUser appUser) {
+    private ServerWebExchange decorate(ServerWebExchange exchange, String token) {
         final ServerHttpRequest decorated = new ServerHttpRequestDecorator(exchange.getRequest()) {
             @Override
             public Flux<DataBuffer> getBody() {
                 return super.getBody().collectList()
-                        .flatMapMany(dataBuffers -> authenticateToken(appUser).flatMapIterable(aBoolean -> dataBuffers));
+                        .flatMapMany(dataBuffers -> authenticateToken(token).flatMapIterable(aBoolean -> dataBuffers));
             }
         };
 
@@ -60,18 +64,16 @@ public class AuthenticationFilter implements WebFilter {
         };
     }
 
-    private Mono<?> authenticateToken(AppUser appUser) {
-        return verifyAppUser(appUser)
+    private Mono<?> authenticateToken(String token) {
+        return verifyAppUser(token)
                 .filter(valid -> valid)
                 .switchIfEmpty(Mono.error(new RuntimeException("INVALID_USER_TOKEN")));
     }
 
 
-    private Mono<Boolean> verifyAppUser(AppUser appUser) {
+    private Mono<Boolean> verifyAppUser(String token) {
 
-        return getAppUser(appUser.getUserAudience())
-                .map(userFromCache -> verifyUserData(appUser, userFromCache))
-                .defaultIfEmpty(false);
+        return Mono.just(true);
     }
 
     private boolean verifyUserData(AppUser appUser, AuthenticationTokenData userFromCache) {
